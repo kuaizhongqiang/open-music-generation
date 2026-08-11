@@ -5,6 +5,7 @@ import numpy as np
 
 from ..score.model import Score
 from . import envelope
+from .effects import RoomReverb
 from .engine import RenderEngine
 from .track import render_track
 
@@ -26,8 +27,8 @@ def apply_track_stereo(buf: np.ndarray, gain_db: float, pan: float) -> np.ndarra
     return out
 
 
-def mix_tracks(engine: RenderEngine, score: Score) -> np.ndarray:
-    """渲染全部轨道并混音，返回 stereo (N,2)。空乐谱返回空。"""
+def mix_tracks(engine: RenderEngine, score: Score, reverb: float = 0.0) -> np.ndarray:
+    """渲染全部轨道并混音，返回 stereo (N,2)。reverb 为房间混响 wet 比例 (0..1)。"""
     rendered = []
     max_len = 0
     for track in score.tracks:
@@ -42,4 +43,6 @@ def mix_tracks(engine: RenderEngine, score: Score) -> np.ndarray:
     master = np.zeros((max_len, 2), dtype=np.float32)
     for buf in rendered:
         master[: len(buf)] += buf
+    if reverb > 0.0:
+        master = RoomReverb(engine.project_sr).process(master, min(1.0, reverb))
     return envelope.soft_clip(master)

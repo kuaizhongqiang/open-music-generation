@@ -54,9 +54,25 @@ P4 接入商业库只是灌数据。
 **决策**：mp3 用子进程调用 `ffmpeg -c:a libmp3lame`。
 **理由**：本机已装 ffmpeg（winget），质量高、零额外 Python 依赖；`lameenc` 作为无 ffmpeg 环境的备选。
 
+## ADR-009：技法语义按"请求技法"塑造
+
+**决策**：时长/包络按**请求的技法**塑造，而非解析到的样本技法。
+staccato/spiccato → 时长压缩到 ~60% 快起快收；pizzicato → 短尾自然衰减；
+sustain/legato/arco → 名义时长 + 90ms 尾部重叠（连奏感，音符不硬切）。
+**理由**：库可能没有请求的技法样本（如 solo_violin 无 staccato），回退到最近样本时
+仍应保留请求技法的音乐语义，否则 staccato 请求会变成 sustain 听感。
+
+## ADR-010：空间感用合成 IR 卷积混响
+
+**决策**：混响 = 指数衰减噪声 IR 的 FFT 卷积（纯 numpy），mixer 按 wet 比例混合，
+尾音完整保留（输出比输入长）。demo 默认 wet=0.25，可用 `--reverb` 调。
+**理由**：VSCO2 干样本直出无空间感，是"难听"主因之一；FFT 卷积比 Schroeder
+递归滤波简单且快，且无需 scipy。混响与增益归一化解耦，不抹混音意图。
+
 ## 未决
 
 - **力度层边界**：f/p、v1-v3 到 MIDI 0-127 的区间是约定而非库内事实，
   存 `pitch_config.json` 可人工校准
 - **定音鼓音高**：Timpani1-5 的音高目前是合理默认值（F2/C3/F3/C4/F4），可校准
-- **混音响度**：目前依赖各样本自然响度 + 轨道 gain_db，无自动响度匹配（MAYBE P3）
+- **超长音符**：仍按名义时长 + 尾音截断，未做 loop/sustain 段（P4/P5 候选）
+- **混响参数**：tau/长度目前固定，未参数化暴露（后续可做成 Score renderer_options）

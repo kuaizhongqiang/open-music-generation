@@ -76,11 +76,11 @@ def _cmd_render(args: argparse.Namespace) -> int:
         write_wav(path, buf, engine.project_sr)
         print(f"写出 {path}  ({len(buf) / engine.project_sr:.2f}s)")
     # 混音
-    mix = mix_tracks(engine, score)
+    mix = mix_tracks(engine, score, reverb=args.reverb)
     if len(mix):
         mix_path = outdir / "mix.wav"
         write_wav(mix_path, mix, engine.project_sr)
-        print(f"写出 {mix_path}  (混音 {len(mix) / engine.project_sr:.2f}s)")
+        print(f"写出 {mix_path}  (混音 {len(mix) / engine.project_sr:.2f}s, reverb={args.reverb})")
         if args.mp3:
             mp3_path = export_mp3(mix_path, mix_path.with_suffix(".mp3"))
             print(f"写出 {mp3_path}")
@@ -100,6 +100,7 @@ def _cmd_demo(args: argparse.Namespace) -> int:
         argparse.Namespace(
             score=str(score_path), lib=args.lib, library=args.library,
             sr=args.sr, backend=args.backend, out=args.out, mp3=args.mp3,
+            reverb=args.reverb,
         )
     )
 
@@ -118,6 +119,7 @@ def main(argv: list[str] | None = None) -> int:
     p_render.add_argument("--sr", type=int, default=44100)
     p_render.add_argument("--backend", default="samplerate", choices=["samplerate", "numpy"])
     p_render.add_argument("--mp3", action="store_true", help="同时导出 mp3")
+    p_render.add_argument("--reverb", type=float, default=0.0, help="房间混响 wet 比例 0..1")
     p_render.set_defaults(func=_cmd_render)
 
     p_demo = sub.add_parser("demo", help="生成并渲染 demo 乐谱")
@@ -127,6 +129,7 @@ def main(argv: list[str] | None = None) -> int:
     p_demo.add_argument("--sr", type=int, default=44100)
     p_demo.add_argument("--backend", default="samplerate", choices=["samplerate", "numpy"])
     p_demo.add_argument("--mp3", action="store_true", help="同时导出 mp3")
+    p_demo.add_argument("--reverb", type=float, default=0.25, help="房间混响 wet 比例 0..1（demo 默认 0.25）")
     p_demo.set_defaults(func=_cmd_demo)
 
     args = parser.parse_args(argv)
