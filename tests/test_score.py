@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from omg.score import io as score_io
-from omg.score.model import Note, Score, Track
+from omg.score.model import Note, Score, Track, transpose
 
 
 def test_score_roundtrip():
@@ -48,3 +48,16 @@ def test_score_roundtrip_gain_pan():
     t = loaded.tracks[0]
     assert t.gain_db == -3.5
     assert t.pan == 0.6
+
+
+def test_transpose():
+    """整体移调：所有音符平移，轨道参数保持。"""
+    score = Score(tracks=[Track(id="a", name="a", instrument="i",
+                                gain_db=-2, pan=0.5, notes=[
+                                    Note(0, 1.0, 60, 100, "arco_vib"),
+                                    Note(1.0, 0.5, 67, 90, None)])])
+    shifted = transpose(score, -5)
+    t = shifted.tracks[0]
+    assert [n.pitch for n in t.notes] == [55, 62]
+    assert t.gain_db == -2 and t.pan == 0.5
+    assert t.notes[0].technique == "arco_vib"

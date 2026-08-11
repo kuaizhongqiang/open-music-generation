@@ -36,3 +36,20 @@ class Score:
     title: str = "untitled"
     tempo_bpm: float = 90.0
     tracks: list[Track] = field(default_factory=list)
+
+
+def transpose(score: Score, semitones: int) -> Score:
+    """整体移调：所有音符 pitch 平移 semitones 半音（负数降低）。"""
+    shifted = []
+    for track in score.tracks:
+        shifted.append(Track(
+            id=track.id,
+            name=track.name,
+            instrument=track.instrument,
+            gain_db=track.gain_db,
+            pan=track.pan,
+            bass_boost_db=track.bass_boost_db,
+            notes=[Note(n.start_beat, n.duration, n.pitch + semitones,
+                        n.velocity, n.technique) for n in track.notes],
+        ))
+    return Score(title=score.title, tempo_bpm=score.tempo_bpm, tracks=shifted)

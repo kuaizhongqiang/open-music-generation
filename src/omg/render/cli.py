@@ -15,7 +15,7 @@ import soundfile as sf
 from ..io.export import export_mp3, write_wav
 from ..library.index import get_library_id, open_db
 from ..score import io as score_io
-from ..score.model import Note, Score, Track
+from ..score.model import Note, Score, Track, transpose
 from .engine import RenderEngine
 from .mixer import apply_track_stereo, mix_tracks
 from .track import render_track
@@ -98,6 +98,9 @@ def _build_engine(conn, library: str, sr: int, backend: str) -> tuple[RenderEngi
 
 def _cmd_render(args: argparse.Namespace) -> int:
     score = score_io.load(args.score)
+    if getattr(args, "transpose", 0):
+        score = transpose(score, args.transpose)
+        print(f"[移调] 全体音符 {args.transpose:+d} 半音")
     conn = open_db(args.lib)
     engine, _ = _build_engine(conn, args.library, args.sr, args.backend)
     outdir = Path(args.out)
@@ -138,7 +141,7 @@ def _cmd_chords(args: argparse.Namespace) -> int:
         argparse.Namespace(
             score=str(score_path), lib=args.lib, library=args.library,
             sr=args.sr, backend=args.backend, out=args.out, mp3=args.mp3,
-            reverb=args.reverb,
+            reverb=args.reverb, transpose=args.transpose,
         )
     )
 
@@ -154,7 +157,7 @@ def _cmd_demo(args: argparse.Namespace) -> int:
         argparse.Namespace(
             score=str(score_path), lib=args.lib, library=args.library,
             sr=args.sr, backend=args.backend, out=args.out, mp3=args.mp3,
-            reverb=args.reverb,
+            reverb=args.reverb, transpose=args.transpose,
         )
     )
 
@@ -174,6 +177,7 @@ def main(argv: list[str] | None = None) -> int:
     p_render.add_argument("--backend", default="samplerate", choices=["samplerate", "numpy"])
     p_render.add_argument("--mp3", action="store_true", help="同时导出 mp3")
     p_render.add_argument("--reverb", type=float, default=0.0, help="房间混响 wet 比例 0..1")
+    p_render.add_argument("--transpose", type=int, default=0, help="全体音符移调 N 半音（负数为降）")
     p_render.set_defaults(func=_cmd_render)
 
     p_chords = sub.add_parser("chords", help="渲染 C 大调 I-IV-V-I 大三和弦进行（验证和音）")
@@ -184,6 +188,7 @@ def main(argv: list[str] | None = None) -> int:
     p_chords.add_argument("--backend", default="samplerate", choices=["samplerate", "numpy"])
     p_chords.add_argument("--mp3", action="store_true", help="同时导出 mp3")
     p_chords.add_argument("--reverb", type=float, default=0.25)
+    p_chords.add_argument("--transpose", type=int, default=0, help="全体音符移调 N 半音（负数为降）")
     p_chords.set_defaults(func=_cmd_chords)
 
     p_demo = sub.add_parser("demo", help="生成并渲染 demo 乐谱")
@@ -194,6 +199,7 @@ def main(argv: list[str] | None = None) -> int:
     p_demo.add_argument("--backend", default="samplerate", choices=["samplerate", "numpy"])
     p_demo.add_argument("--mp3", action="store_true", help="同时导出 mp3")
     p_demo.add_argument("--reverb", type=float, default=0.25, help="房间混响 wet 比例 0..1（demo 默认 0.25）")
+    p_demo.add_argument("--transpose", type=int, default=0, help="全体音符移调 N 半音（负数为降）")
     p_demo.set_defaults(func=_cmd_demo)
 
     args = parser.parse_args(argv)
