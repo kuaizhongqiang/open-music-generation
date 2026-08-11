@@ -35,10 +35,14 @@ def main() -> int:
     # 钢琴和弦（每两拍一个分解/柱式）
     piano = [Note(i * 1.0, 1.0, p, 70, None) for i, p in
              enumerate([60, 64, 67, 64] * 2)]
+    # 倍大提琴低音：C2/G2 交替（音域 16-47）
+    bass = [Note(i * 1.0, 1.0, 36 if i % 2 == 0 else 43, 85, "sustain_vib")
+            for i in range(4)]
     # 定音鼓点缀
     timp = [Note(i * 2.0, 0.3, 41, 90, "hit") for i in range(4)]
 
     score = Score(title="multitimbral", tempo_bpm=120.0, tracks=[
+        Track(id="bass", name="double bass", instrument="solo_contrabass", notes=bass, gain_db=-3),
         Track(id="violin", name="violin", instrument="solo_violin", notes=violin),
         Track(id="flute", name="flute", instrument="flute", notes=flute, gain_db=-3, pan=0.3),
         Track(id="horn", name="horn", instrument="f_horn", notes=horn, gain_db=-2, pan=-0.2),
