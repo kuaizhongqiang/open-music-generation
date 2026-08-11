@@ -26,6 +26,8 @@ class Track:
     name: str
     instrument: str            # 索引中的规范化乐器 id
     notes: list[Note] = field(default_factory=list)
+    gain_db: float = 0.0       # 轨道增益（dB），混音时叠加
+    pan: float = 0.0           # 声像 -1(左)..1(右)，0 居中，等功率
 
 
 @dataclass

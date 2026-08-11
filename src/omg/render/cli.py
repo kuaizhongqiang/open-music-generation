@@ -12,10 +12,12 @@ from pathlib import Path
 
 import soundfile as sf
 
+from ..io.export import export_mp3, write_wav
 from ..library.index import get_library_id, open_db
 from ..score import io as score_io
 from ..score.model import Note, Score, Track
 from .engine import RenderEngine
+from .mixer import mix_tracks
 from .track import render_track
 
 
@@ -31,13 +33,21 @@ def _make_demo() -> Score:
         Note(3.5, 0.5, 72, 110, "spiccato"),
         Note(4.0, 2.0, 71, 80, "arco_vib"),
     ]
+    # 大提琴伴奏（比旋律低，稍弱、略左）
+    cello = Track(id="cello", name="cello line", instrument="cello_section",
+                  notes=[Note(i * 0.5, 2.0, 48 + i, 80, "sustain_vib") for i in range(8)],
+                  gain_db=-6.0, pan=-0.3)
+    # 定音鼓低音点缀（每两拍一下，略右）
+    timpani = Track(id="timpani", name="timpani hits", instrument="timpani",
+                    notes=[Note(i * 2.0, 0.5, 41, 90, "hit") for i in range(3)],
+                    gain_db=-4.0, pan=0.4)
     return Score(
         title="demo",
         tempo_bpm=90.0,
         tracks=[
             Track(id="violin", name="violin melody", instrument="solo_violin", notes=notes),
-            Track(id="cello", name="cello line", instrument="cello_section",
-                  notes=[Note(i * 0.5, 2.0, 48 + i, 80, "sustain_vib") for i in range(8)]),
+            cello,
+            timpani,
         ],
     )
 
@@ -63,8 +73,17 @@ def _cmd_render(args: argparse.Namespace) -> int:
             print(f"[跳过] 空轨 {track.id}")
             continue
         path = outdir / f"trk_{track.id}.wav"
-        sf.write(str(path), buf, engine.project_sr, subtype="PCM_16")
+        write_wav(path, buf, engine.project_sr)
         print(f"写出 {path}  ({len(buf) / engine.project_sr:.2f}s)")
+    # 混音
+    mix = mix_tracks(engine, score)
+    if len(mix):
+        mix_path = outdir / "mix.wav"
+        write_wav(mix_path, mix, engine.project_sr)
+        print(f"写出 {mix_path}  (混音 {len(mix) / engine.project_sr:.2f}s)")
+        if args.mp3:
+            mp3_path = export_mp3(mix_path, mix_path.with_suffix(".mp3"))
+            print(f"写出 {mp3_path}")
     conn.close()
     print("完成")
     return 0
@@ -80,7 +99,7 @@ def _cmd_demo(args: argparse.Namespace) -> int:
     return _cmd_render(
         argparse.Namespace(
             score=str(score_path), lib=args.lib, library=args.library,
-            sr=args.sr, backend=args.backend, out=args.out,
+            sr=args.sr, backend=args.backend, out=args.out, mp3=args.mp3,
         )
     )
 
@@ -98,6 +117,7 @@ def main(argv: list[str] | None = None) -> int:
     p_render.add_argument("--out", default="out")
     p_render.add_argument("--sr", type=int, default=44100)
     p_render.add_argument("--backend", default="samplerate", choices=["samplerate", "numpy"])
+    p_render.add_argument("--mp3", action="store_true", help="同时导出 mp3")
     p_render.set_defaults(func=_cmd_render)
 
     p_demo = sub.add_parser("demo", help="生成并渲染 demo 乐谱")
@@ -106,6 +126,7 @@ def main(argv: list[str] | None = None) -> int:
     p_demo.add_argument("--out", default="out")
     p_demo.add_argument("--sr", type=int, default=44100)
     p_demo.add_argument("--backend", default="samplerate", choices=["samplerate", "numpy"])
+    p_demo.add_argument("--mp3", action="store_true", help="同时导出 mp3")
     p_demo.set_defaults(func=_cmd_demo)
 
     args = parser.parse_args(argv)

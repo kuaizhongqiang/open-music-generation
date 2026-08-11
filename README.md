@@ -13,11 +13,11 @@
 | 高级乐器采样库（当前 VSCO-2-CE 管弦乐） | ✅ 已导入 | P0 |
 | 单轨音频生成（采样器引擎） | ✅ 可用 | P1 |
 | 乐谱模型 v1 + JSON 存取 | ✅ 可用 | P1 |
-| 多轨合成与混音 | ⏳ 规划 | P2 |
+| 多轨合成与混音 | ✅ 可用 | P2 |
 | 多轨编辑 | ⏳ 规划 | P2/P5 |
 | 技法精细化（legato/staccato/力度交叉淡化） | ⏳ 规划 | P3 |
 | 多库支持（Salamander 等商业库） | ⏳ 规划 | P4 |
-| 输出 mp3/wav | wav ✅ / mp3 ⏳ | P2 |
+| 输出 mp3/wav | ✅ 可用 | P2 |
 | CLI server / MCP / 可视化编辑 | ⏳ 规划 | P5 |
 
 阶段路线与完整方案见 [docs/roadmap.md](docs/roadmap.md)。
@@ -38,10 +38,10 @@ python -m omg.library.cli list-instruments --db data/vsco2.sqlite3
 ### 2. 渲染音频
 
 ```bash
-# 生成并渲染 demo 乐谱（C 大调音阶 + 旋律）
-python -m omg.render.cli demo --lib data/vsco2.sqlite3 --out out/
+# 生成并渲染 demo 乐谱（三轨：小提琴+大提琴+定音鼓），同时导出 mp3
+python -m omg.render.cli demo --lib data/vsco2.sqlite3 --out out/ --mp3
 
-# 渲染自定义乐谱 JSON
+# 渲染自定义乐谱 JSON（每轨输出 + 混音 mix.wav）
 python -m omg.render.cli render out/demo.json --lib data/vsco2.sqlite3 --out out/
 ```
 
@@ -78,7 +78,7 @@ docs/         # 设计与数据文档
 |---|---|---|
 | P0 数据基础 | VSCO2 导入（100% 解析率）+ SQLite 索引 | ✅ |
 | P1 单轨渲染引擎 | 乐谱模型 + 采样器渲染 + render CLI | ✅ |
-| P2 多轨合成 | 混音 + mp3 导出 | ⏳ |
+| P2 多轨合成 | 混音 + mp3 导出 | ✅ |
 | P3 技法精细化 | legato/staccato/力度交叉淡化/变调质量 | ⏳ |
 | P4 多库架构 | 商业采样库接入 | ⏳ |
 | P5 交互界面 | CLI server / MCP / 可视化 | ⏳ |
