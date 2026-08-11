@@ -31,7 +31,7 @@ def main() -> int:
 
     score = Score(title="bass-test", tempo_bpm=90.0, tracks=[
         Track(id="bass", name="double bass", instrument="solo_contrabass",
-              notes=bass, bass_boost_db=18),
+              notes=bass, gain_db=6, bass_boost_db=20),
         Track(id="cello", name="cello", instrument="cello_section",
               notes=cello, gain_db=-4),
     ])

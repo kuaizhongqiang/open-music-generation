@@ -17,7 +17,7 @@ from ..library.index import get_library_id, open_db
 from ..score import io as score_io
 from ..score.model import Note, Score, Track
 from .engine import RenderEngine
-from .mixer import mix_tracks
+from .mixer import apply_track_stereo, mix_tracks
 from .track import render_track
 
 
@@ -107,6 +107,9 @@ def _cmd_render(args: argparse.Namespace) -> int:
         if len(buf) == 0:
             print(f"[跳过] 空轨 {track.id}")
             continue
+        # 单轨导出应用轨道增益/声像/EQ，与混音内听感一致
+        buf = apply_track_stereo(buf, track.gain_db, track.pan, track.bass_boost_db,
+                                 engine.project_sr)
         path = outdir / f"trk_{track.id}.wav"
         write_wav(path, buf, engine.project_sr)
         print(f"写出 {path}  ({len(buf) / engine.project_sr:.2f}s)")
