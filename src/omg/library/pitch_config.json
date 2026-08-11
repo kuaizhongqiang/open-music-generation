@@ -1,0 +1,12 @@
+{
+  "dynamics_order": [
+    "ppp", "pp", "p", "soft", "mp", "mf", "f", "loud", "ff", "fff"
+  ],
+  "percussion_pitch": {
+    "Timpani1": 41,
+    "Timpani2": 48,
+    "Timpani3": 53,
+    "Timpani4": 60,
+    "Timpani5": 65
+  }
+}

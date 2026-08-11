@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# 虚拟环境
+.venv/
+venv/
+env/
+
+# 测试与工具缓存
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# 数据：原始采样库与派生索引一律不入库
+# （切换电脑时按 docs/data-setup.md 重新下载并导入）
+data/
+*.sqlite3
+*.sqlite3-*
+*.log
+
+# 渲染输出
+out/
+
+# 本地项目文件（用户创作，暂不版本化）
+projects/
