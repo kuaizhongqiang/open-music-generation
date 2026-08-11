@@ -19,6 +19,8 @@ def to_json(score: Score) -> str:
                 "id": t.id,
                 "name": t.name,
                 "instrument": t.instrument,
+                "gain_db": t.gain_db,
+                "pan": t.pan,
                 "notes": [
                     {
                         "start_beat": n.start_beat,
@@ -43,6 +45,8 @@ def from_json(text: str) -> Score:
             id=t["id"],
             name=t.get("name", t["id"]),
             instrument=t["instrument"],
+            gain_db=t.get("gain_db", 0.0),
+            pan=t.get("pan", 0.0),
             notes=[
                 Note(
                     start_beat=n["start_beat"],

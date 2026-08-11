@@ -28,10 +28,8 @@ def release(sig: np.ndarray, sr: int, release_s: float = RELEASE_S) -> np.ndarra
 
 
 def soft_clip(sig: np.ndarray, ceiling: float = 0.95) -> np.ndarray:
-    """简单 tanh 软限幅保 headroom。"""
-    peak = float(np.max(np.abs(sig))) if sig.size else 0.0
-    if peak == 0.0:
-        return sig
-    sig = sig / peak
-    out = np.tanh(sig * 2.0) / np.tanh(2.0)
-    return (out * ceiling).astype(np.float32)
+    """软限幅器：小信号线性（保留增益/混音比例），大信号向 ceiling 压缩，防削波。
+
+    不做峰值归一化——否则会抹掉轨间 gain 差异。
+    """
+    return (ceiling * np.tanh(sig / ceiling)).astype(np.float32)

@@ -29,9 +29,22 @@ def test_score_roundtrip():
 
 
 def test_score_roundtrip_defaults():
-    """缺省字段（velocity/technique）应填默认值。"""
+    """缺省字段（velocity/technique/gain_db/pan）应填默认值。"""
     text = '{"version":1,"title":"x","tempo_bpm":90,"tracks":[{"id":"a","name":"a",' \
            '"instrument":"i","notes":[{"start_beat":0,"duration":1,"pitch":60}]}]}'
     loaded = score_io.from_json(text)
     assert loaded.tracks[0].notes[0].velocity == 100
     assert loaded.tracks[0].notes[0].technique is None
+    assert loaded.tracks[0].gain_db == 0.0
+    assert loaded.tracks[0].pan == 0.0
+
+
+def test_score_roundtrip_gain_pan():
+    """gain_db/pan 往返保真。"""
+    score = Score(tracks=[Track(id="a", name="a", instrument="i",
+                                gain_db=-3.5, pan=0.6,
+                                notes=[Note(0, 1.0, 60)])])
+    loaded = score_io.from_json(score_io.to_json(score))
+    t = loaded.tracks[0]
+    assert t.gain_db == -3.5
+    assert t.pan == 0.6
