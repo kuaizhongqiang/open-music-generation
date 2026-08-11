@@ -33,9 +33,10 @@ def _make_demo() -> Score:
         Note(3.5, 0.5, 72, 110, "spiccato"),
         Note(4.0, 2.0, 71, 80, "arco_vib"),
     ]
-    # 大提琴伴奏（比旋律低，稍弱、略左）
-    cello = Track(id="cello", name="cello line", instrument="cello_section",
-                  notes=[Note(i * 0.5, 2.0, 48 + i, 80, "sustain_vib") for i in range(8)],
+    # 大提琴协和低音：C3/G3 交替（C 大调主属持续音，永远和谐）
+    cello = Track(id="cello", name="cello bass", instrument="cello_section",
+                  notes=[Note(i * 0.5, 1.0, 48 if (i // 2) % 2 == 0 else 55, 80, "sustain_vib")
+                         for i in range(16)],
                   gain_db=-6.0, pan=-0.3)
     # 定音鼓低音点缀（每两拍一下，略右）
     timpani = Track(id="timpani", name="timpani hits", instrument="timpani",
@@ -48,6 +49,40 @@ def _make_demo() -> Score:
             Track(id="violin", name="violin melody", instrument="solo_violin", notes=notes),
             cello,
             timpani,
+        ],
+    )
+
+
+def _make_chords() -> Score:
+    """C 大调 I-IV-V-I 大三和弦进行（三声部：根音/三音/五音）。
+
+    用来验证"和音"：和弦内的音应是纯五度/大三度的协和关系。
+    """
+    # (根音, 三音, 五音) MIDI
+    chords = [
+        ("C", (48, 52, 55)),   # C 大三和弦
+        ("F", (53, 57, 60)),   # F 大三和弦
+        ("G", (55, 59, 62)),   # G 大三和弦
+        ("C", (48, 52, 55)),   # C
+    ]
+    beat_s = 0.667  # 90bpm
+    dur = 2.0
+    cello, viola, violin = [], [], []
+    for i, (name, (r, third, fifth)) in enumerate(chords):
+        t = i * dur
+        cello.append(Note(t, dur, r, 90, "sustain_vib"))
+        viola.append(Note(t, dur, third, 85, "sustain_vib"))
+        violin.append(Note(t, dur, fifth, 90, "arco_vib"))
+    return Score(
+        title="chords-I-IV-V-I",
+        tempo_bpm=90.0,
+        tracks=[
+            Track(id="cello", name="root", instrument="cello_section",
+                  notes=cello, gain_db=-4.0, pan=-0.3),
+            Track(id="viola", name="third", instrument="viola_section",
+                  notes=viola, gain_db=-2.0, pan=0.0),
+            Track(id="violin", name="fifth", instrument="violin_section",
+                  notes=violin, pan=0.3),
         ],
     )
 
@@ -89,6 +124,22 @@ def _cmd_render(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_chords(args: argparse.Namespace) -> int:
+    outdir = Path(args.out)
+    outdir.mkdir(parents=True, exist_ok=True)
+    score = _make_chords()
+    score_path = outdir / "chords.json"
+    score_io.save(score, score_path)
+    print(f"和弦乐谱: {score_path}")
+    return _cmd_render(
+        argparse.Namespace(
+            score=str(score_path), lib=args.lib, library=args.library,
+            sr=args.sr, backend=args.backend, out=args.out, mp3=args.mp3,
+            reverb=args.reverb,
+        )
+    )
+
+
 def _cmd_demo(args: argparse.Namespace) -> int:
     outdir = Path(args.out)
     outdir.mkdir(parents=True, exist_ok=True)
@@ -121,6 +172,16 @@ def main(argv: list[str] | None = None) -> int:
     p_render.add_argument("--mp3", action="store_true", help="同时导出 mp3")
     p_render.add_argument("--reverb", type=float, default=0.0, help="房间混响 wet 比例 0..1")
     p_render.set_defaults(func=_cmd_render)
+
+    p_chords = sub.add_parser("chords", help="渲染 C 大调 I-IV-V-I 大三和弦进行（验证和音）")
+    p_chords.add_argument("--lib", required=True)
+    p_chords.add_argument("--library", default="vsco2")
+    p_chords.add_argument("--out", default="out")
+    p_chords.add_argument("--sr", type=int, default=44100)
+    p_chords.add_argument("--backend", default="samplerate", choices=["samplerate", "numpy"])
+    p_chords.add_argument("--mp3", action="store_true", help="同时导出 mp3")
+    p_chords.add_argument("--reverb", type=float, default=0.25)
+    p_chords.set_defaults(func=_cmd_chords)
 
     p_demo = sub.add_parser("demo", help="生成并渲染 demo 乐谱")
     p_demo.add_argument("--lib", required=True)
