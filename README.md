@@ -15,7 +15,7 @@
 | 乐谱模型 v1 + JSON 存取 | ✅ 可用 | P1 |
 | 多轨合成与混音 | ✅ 可用 | P2 |
 | 多轨编辑 | ⏳ 规划 | P2/P5 |
-| 技法精细化（legato/staccato/力度交叉淡化） | ⏳ 规划 | P3 |
+| 技法精细化（legato/staccato/力度交叉淡化/混响） | ✅ 可用 | P3 |
 | 多库支持（Salamander 等商业库） | ⏳ 规划 | P4 |
 | 输出 mp3/wav | ✅ 可用 | P2 |
 | CLI server / MCP / 可视化编辑 | ⏳ 规划 | P5 |
@@ -79,6 +79,6 @@ docs/         # 设计与数据文档
 | P0 数据基础 | VSCO2 导入（100% 解析率）+ SQLite 索引 | ✅ |
 | P1 单轨渲染引擎 | 乐谱模型 + 采样器渲染 + render CLI | ✅ |
 | P2 多轨合成 | 混音 + mp3 导出 | ✅ |
-| P3 技法精细化 | legato/staccato/力度交叉淡化/变调质量 | ⏳ |
+| P3 技法精细化 | legato 衔接/staccato 缩短/力度交叉淡化/混响 | ✅ |
 | P4 多库架构 | 商业采样库接入 | ⏳ |
 | P5 交互界面 | CLI server / MCP / 可视化 | ⏳ |

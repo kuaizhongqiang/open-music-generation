@@ -69,7 +69,8 @@ def test_pitch_exact_and_shift(sine_lib):
 def test_note_duration(sine_lib):
     engine, _ = sine_lib
     note_s = 0.5
-    buf = engine.render_note("solo_violin", 60, 100, "arco_vib", note_s)
+    # 无技法 → default 族：精确截断到名义时长
+    buf = engine.render_note("solo_violin", 60, 100, None, note_s)
     expected = int(note_s * engine.project_sr)
     assert abs(len(buf) - expected) <= engine.project_sr // 20, f"长度 {len(buf)} vs {expected}"
 
