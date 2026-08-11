@@ -5,7 +5,7 @@ import numpy as np
 
 from ..score.model import Score
 from . import envelope
-from .effects import RoomReverb
+from .effects import RoomReverb, bass_shelf
 from .engine import RenderEngine
 from .track import render_track
 
@@ -17,8 +17,11 @@ def pan_gain(pan: float) -> tuple[float, float]:
     return float(np.cos(angle)), float(np.sin(angle))
 
 
-def apply_track_stereo(buf: np.ndarray, gain_db: float, pan: float) -> np.ndarray:
-    """对整轨 stereo 应用增益与声像。"""
+def apply_track_stereo(buf: np.ndarray, gain_db: float, pan: float,
+                       bass_boost_db: float = 0.0, sr: int = 44100) -> np.ndarray:
+    """对整轨 stereo 应用低频补偿、增益与声像。"""
+    if bass_boost_db:
+        buf = bass_shelf(buf, sr, fc=85.0, gain_db=bass_boost_db)
     gain = 10.0 ** (gain_db / 20.0)
     l, r = pan_gain(pan)
     out = np.empty_like(buf)
@@ -35,7 +38,8 @@ def mix_tracks(engine: RenderEngine, score: Score, reverb: float = 0.0) -> np.nd
         buf = render_track(engine, score, track)
         if len(buf) == 0:
             continue
-        buf = apply_track_stereo(buf, track.gain_db, track.pan)
+        buf = apply_track_stereo(buf, track.gain_db, track.pan, track.bass_boost_db,
+                                 engine.project_sr)
         rendered.append(buf)
         max_len = max(max_len, len(buf))
     if not rendered:

@@ -35,6 +35,26 @@ def fft_convolve(x: np.ndarray, ir: np.ndarray) -> np.ndarray:
     return out
 
 
+def bass_shelf(x: np.ndarray, sr: int, fc: float = 85.0, gain_db: float = 0.0) -> np.ndarray:
+    """低频搁架 EQ（FFT 域实现，纯 numpy）。
+
+    对 fc 以下的频率提升 gain_db（如低音提琴基频弱，用 +12dB 补偿）。
+    返回与 x 同长。
+    """
+    if gain_db == 0.0:
+        return x
+    n = 1 << (len(x) - 1).bit_length()
+    spec = np.fft.rfft(x, n, axis=0)
+    f = np.fft.rfftfreq(n, 1 / sr)
+    shelf = gain_db / (1.0 + (f / fc) ** 2)   # 低频增益 → 高频趋 0
+    gain = 10.0 ** (shelf / 20.0)
+    if x.ndim == 1:
+        out = np.fft.irfft(spec * gain, n)[: len(x)]
+    else:
+        out = np.fft.irfft(spec * gain[:, None], n, axis=0)[: len(x)]
+    return out.astype(np.float32)
+
+
 class RoomReverb:
     """可复用的房间混响：IR 生成一次，process 时按 wet 比例混合。"""
 

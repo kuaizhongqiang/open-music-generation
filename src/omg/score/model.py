@@ -28,6 +28,7 @@ class Track:
     notes: list[Note] = field(default_factory=list)
     gain_db: float = 0.0       # 轨道增益（dB），混音时叠加
     pan: float = 0.0           # 声像 -1(左)..1(右)，0 居中，等功率
+    bass_boost_db: float = 0.0 # 低频搁架 EQ 增益（低音提琴基频弱，用 +10~15dB 补偿）
 
 
 @dataclass
